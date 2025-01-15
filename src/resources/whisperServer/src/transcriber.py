@@ -13,11 +13,17 @@ logger = logging.getLogger(__name__)
 
 class AudioTranscriberServicer:
     def __init__(self):
-        self.model_size = os.environ.get("MODEL_SIZE", "medium")
+
+        self.model_id = os.environ.get("MODEL", "medium")
+        self.compute_type = os.environ.get("COMPUTE_TYPE", "float16")
+        self.device = os.environ.get("DEVICE", "cuda")
+
         self.model = WhisperModel(
-            self.model_size, device="cuda", compute_type="float16"
+            self.model_id, device=self.device, compute_type=self.compute_type
         )
+
         logger.info("Loaded Whisper model.")
+        
         # Warmup the model
         logger.info("Warming up the model...")
         _ = self.model.transcribe(np.zeros(16000, dtype=np.int16), beam_size=5)
@@ -27,10 +33,12 @@ class AudioTranscriberServicer:
         self.sample_rate = 16000
         self.frame_duration = 30  # Frame duration in milliseconds
         self.frame_length = int(self.sample_rate * self.frame_duration / 1000)
+        
         self.vad_mode = int(os.environ.get("VAD_MODE", "3"))
         self.vad = webrtcvad.Vad(mode=self.vad_mode)
         self.vad_window_size = 30  # Number of frames to consider for VAD
         self.vad_frames = []
+       
         self.recordings_dir = "/app/recordings"
         self.wav_file = None
         self.min_segment_duration = 3  # Minimum duration in seconds

@@ -6,8 +6,5 @@ services:
       dockerfile: Dockerfile
     ports:
       - '8765:8765'
-    environment:
-      - MODEL=tiny
-      - VAD_MODE=2
     volumes:
       - ./recordings:/app/recordings
